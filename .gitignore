@@ -1,0 +1,23 @@
+# Python/Django rules
+__pycache__/
+*.py[cod]
+*$py.class
+db.sqlite3
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# Node/React rules
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# System/IDE rules
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.gemini/
