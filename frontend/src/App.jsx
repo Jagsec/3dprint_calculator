@@ -6,6 +6,14 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Calculator from './components/Calculator';
 import History from './components/History';
+import ProjectManager from './components/ProjectManager';
+import KanbanBoard from './components/KanbanBoard';
+import InventoryManager from './components/InventoryManager';
+import PrinterManager from './components/PrinterManager';
+import ClientManager from './components/ClientManager';
+import SettingsManager from './components/SettingsManager';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 // Wrapper para proteger rutas que requieren autenticación
 const ProtectedRoute = ({ children }) => {
@@ -69,6 +77,70 @@ function App() {
                 <ProtectedRoute>
                   <History />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/projects" 
+              element={
+                <ProtectedRoute>
+                  <ProjectManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/kanban" 
+              element={
+                <ProtectedRoute>
+                  <KanbanBoard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory" 
+              element={
+                <ProtectedRoute>
+                  <InventoryManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/printers" 
+              element={
+                <ProtectedRoute>
+                  <PrinterManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clients" 
+              element={
+                <ProtectedRoute>
+                  <ClientManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <SettingsManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/forgot-password" 
+              element={
+                <GuestRoute>
+                  <ForgotPassword />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="/reset-password/:uid/:token" 
+              element={
+                <GuestRoute>
+                  <ResetPassword />
+                </GuestRoute>
               } 
             />
             <Route 

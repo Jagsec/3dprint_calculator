@@ -62,9 +62,14 @@ function Login() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Contraseña
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label className="form-label" htmlFor="password" style={{ marginBottom: 0 }}>
+                Contraseña
+              </label>
+              <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--secondary)', textDecoration: 'none' }}>
+                ¿La olvidaste?
+              </Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <Key size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
               <input

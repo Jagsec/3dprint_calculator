@@ -33,6 +33,19 @@ function Calculator() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState({ type: null, message: '' });
+  const [printers, setPrinters] = useState([]);
+
+  useEffect(() => {
+    const fetchPrinters = async () => {
+      try {
+        const response = await api.get('/printers/');
+        setPrinters(response.data);
+      } catch (err) {
+        console.error("Error al cargar impresoras de la flota:", err);
+      }
+    };
+    fetchPrinters();
+  }, []);
 
   // Cargar item para edición si hay un ID en la URL
   useEffect(() => {
@@ -335,6 +348,36 @@ function Calculator() {
               <Printer size={18} />
               <span>2. Impresora y Consumo Eléctrico</span>
             </div>
+
+            {printers.length > 0 && (
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" htmlFor="calc-printer-select">Perfil de Impresora (Carga automática)</label>
+                <select
+                  id="calc-printer-select"
+                  className="form-input"
+                  defaultValue=""
+                  onChange={e => {
+                    const selectedId = e.target.value;
+                    if (!selectedId) return;
+                    const printer = printers.find(p => p.id.toString() === selectedId.toString());
+                    if (printer) {
+                      setCalcState(prev => ({
+                        ...prev,
+                        printer_wattage: printer.wattage,
+                        printer_depreciation_hour: parseFloat(printer.depreciation_per_hour),
+                        electricity_cost_kwh: parseFloat(printer.electricity_cost_kwh)
+                      }));
+                    }
+                  }}
+                >
+                  <option value="">-- Selecciona un perfil para autorrellenar --</option>
+                  {printers.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.wattage}W)</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="grid-2">
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>

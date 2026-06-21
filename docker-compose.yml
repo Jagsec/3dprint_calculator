@@ -34,6 +34,8 @@ services:
       - DB_PASSWORD=print3d_password
       - SECRET_KEY=django-insecure-3dprintcalcsecretkeychangeit
       - DEBUG=True
+      - EMAIL_HOST_USER=jaimegovea2@gmail.com
+      - EMAIL_HOST_PASSWORD=zjywbkggtpckmvfa
     depends_on:
       - db
 
