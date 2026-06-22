@@ -21,6 +21,7 @@ function ProjectManager() {
   const [clients, setClients] = useState([]);
   const [printers, setPrinters] = useState([]);
   const [inventory, setInventory] = useState([]);
+  const [estimates, setEstimates] = useState([]);
   
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [projectDetails, setProjectDetails] = useState(null);
@@ -79,6 +80,9 @@ function ProjectManager() {
       
       const matRes = await api.get('/materials/');
       setInventory(matRes.data);
+
+      const estsRes = await api.get('/estimates/');
+      setEstimates(estsRes.data);
     } catch (err) {
       console.error(err);
       showAlert('error', 'Error al sincronizar datos del ERP.');
@@ -512,7 +516,52 @@ function ProjectManager() {
 
                 {/* FORMULARIO AGREGAR IMPRESIÓN */}
                 <form onSubmit={handleAddPrint} style={{ borderTop: '1px dashed rgba(255,255,255,0.05)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>+ Agregar Pieza Impresa al Presupuesto</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>+ Agregar Pieza Impresa al Presupuesto</div>
+                    {estimates.length > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>o importar del Historial:</span>
+                        <select
+                          className="form-input"
+                          style={{ width: '200px', padding: '0.25rem 0.5rem', fontSize: '0.75rem', height: '28px' }}
+                          value=""
+                          onChange={e => {
+                            const estId = e.target.value;
+                            if (!estId) return;
+                            const est = estimates.find(item => item.id.toString() === estId.toString());
+                            if (est) {
+                              let printVal = est.print_time_minutes;
+                              let printUnit = 'minutes';
+                              if (est.print_time_minutes % 60 === 0 || est.print_time_minutes >= 60) {
+                                printVal = est.print_time_minutes / 60;
+                                printUnit = 'hours';
+                              }
+
+                              setPrintForm(prev => ({
+                                ...prev,
+                                name: est.name,
+                                filament_type: est.filament_type,
+                                filament_cost_per_kg: parseFloat(est.filament_cost_per_kg) || 20.00,
+                                part_weight_grams: parseFloat(est.part_weight_grams) || 100.00,
+                                waste_percentage: parseFloat(est.waste_percentage) || 10.00,
+                                print_time_value: printVal,
+                                print_time_unit: printUnit,
+                                printer_wattage: est.printer_wattage || 150,
+                                electricity_cost_kwh: parseFloat(est.electricity_cost_kwh) || 0.10,
+                                printer_depreciation_hour: parseFloat(est.printer_depreciation_hour) || 0.80
+                              }));
+                              showAlert('success', `Datos de "${est.name}" cargados en el formulario.`);
+                            }
+                          }}
+                        >
+                          <option value="">-- Selecciona --</option>
+                          {estimates.map(item => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                   <div className="grid-3">
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Nombre de Pieza</label>
