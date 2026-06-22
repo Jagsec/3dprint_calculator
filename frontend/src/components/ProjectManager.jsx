@@ -27,6 +27,7 @@ function ProjectManager() {
   const [projectDetails, setProjectDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState('list'); // 'list' | 'detail'
+  const [laborUnit, setLaborUnit] = useState('hours');
   
   // Alert banner
   const [alert, setAlert] = useState({ type: null, message: '' });
@@ -52,10 +53,7 @@ function ProjectManager() {
     print_time_unit: 'hours',
     printer_wattage: 150,
     electricity_cost_kwh: 0.10,
-    printer_depreciation_hour: 0.80,
-    post_process_value: 1,
-    post_process_unit: 'hours',
-    post_process_hourly_rate: 8.00
+    printer_depreciation_hour: 0.80
   });
 
   const [materialForm, setMaterialForm] = useState({
@@ -145,7 +143,9 @@ function ProjectManager() {
         client: updated.client || null,
         margin_percentage: parseFloat(updated.margin_percentage) || 30.00,
         status: updated.status,
-        due_date: updated.due_date || null
+        due_date: updated.due_date || null,
+        labor_minutes: parseInt(updated.labor_minutes) || 0,
+        labor_hourly_rate: parseFloat(updated.labor_hourly_rate) || 8.00
       };
       await api.put(`/projects/${selectedProjectId}/`, payload);
       fetchProjectDetails(selectedProjectId);
@@ -153,6 +153,21 @@ function ProjectManager() {
       console.error(err);
       showAlert('error', 'Error al actualizar proyecto.');
     }
+  };
+
+  const getLaborTimeDisplay = () => {
+    if (!projectDetails) return 0;
+    const mins = projectDetails.labor_minutes || 0;
+    if (laborUnit === 'hours') {
+      return (mins / 60).toFixed(1);
+    }
+    return mins;
+  };
+
+  const handleLaborTimeChange = (val) => {
+    const numeric = parseFloat(val) || 0;
+    const mins = Math.round(laborUnit === 'hours' ? numeric * 60 : numeric);
+    handleUpdateProjectGeneral('labor_minutes', mins);
   };
 
   // Eliminar proyecto
@@ -201,12 +216,6 @@ function ProjectManager() {
         : printForm.print_time_value
     );
 
-    const post_process_minutes = Math.round(
-      printForm.post_process_unit === 'hours' 
-        ? printForm.post_process_value * 60 
-        : printForm.post_process_value
-    );
-
     const payload = {
       project: selectedProjectId,
       name: printForm.name,
@@ -218,9 +227,7 @@ function ProjectManager() {
       print_time_minutes: print_time_minutes,
       printer_wattage: parseInt(printForm.printer_wattage) || 0,
       electricity_cost_kwh: parseFloat(printForm.electricity_cost_kwh) || 0,
-      printer_depreciation_hour: parseFloat(printForm.printer_depreciation_hour) || 0,
-      post_process_minutes: post_process_minutes,
-      post_process_hourly_rate: parseFloat(printForm.post_process_hourly_rate) || 0
+      printer_depreciation_hour: parseFloat(printForm.printer_depreciation_hour) || 0
     };
 
     try {
@@ -230,8 +237,7 @@ function ProjectManager() {
         name: '', printer: '', filament_type: 'PLA', filament_cost_per_kg: 20.00,
         part_weight_grams: 100.00, waste_percentage: 10.00, print_time_value: 5,
         print_time_unit: 'hours', printer_wattage: 150, electricity_cost_kwh: 0.10,
-        printer_depreciation_hour: 0.80, post_process_value: 1, post_process_unit: 'hours',
-        post_process_hourly_rate: 8.00
+        printer_depreciation_hour: 0.80
       });
       fetchProjectDetails(selectedProjectId);
     } catch (err) {
@@ -629,13 +635,28 @@ function ProjectManager() {
                     </div>
                   </div>
 
-                  <div className="grid-3">
+                  <div className="grid-2">
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                         <label className="form-label" style={{ marginBottom: 0 }}>Tiempo Impr.</label>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: '600' }} onClick={() => setPrintForm(prev => ({ ...prev, print_time_unit: prev.print_time_unit === 'hours' ? 'minutes' : 'hours' }))}>
-                          {printForm.print_time_unit === 'hours' ? 'H' : 'M'}
-                        </span>
+                        <div className="toggle-group" style={{ scale: '0.85', transformOrigin: 'right', padding: '1px' }}>
+                          <button
+                            type="button"
+                            className={`toggle-btn ${printForm.print_time_unit === 'hours' ? 'active' : ''}`}
+                            style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem' }}
+                            onClick={() => setPrintForm(prev => ({ ...prev, print_time_unit: 'hours' }))}
+                          >
+                            H
+                          </button>
+                          <button
+                            type="button"
+                            className={`toggle-btn ${printForm.print_time_unit === 'minutes' ? 'active' : ''}`}
+                            style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem' }}
+                            onClick={() => setPrintForm(prev => ({ ...prev, print_time_unit: 'minutes' }))}
+                          >
+                            M
+                          </button>
+                        </div>
                       </div>
                       <input
                         type="number"
@@ -654,6 +675,9 @@ function ProjectManager() {
                         onChange={e => setPrintForm(prev => ({ ...prev, printer_wattage: parseInt(e.target.value) || 0 }))}
                       />
                     </div>
+                  </div>
+
+                  <div className="grid-2">
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Depreciación ($/h)</label>
                       <input
@@ -664,9 +688,6 @@ function ProjectManager() {
                         onChange={e => setPrintForm(prev => ({ ...prev, printer_depreciation_hour: parseFloat(e.target.value) || 0 }))}
                       />
                     </div>
-                  </div>
-
-                  <div className="grid-3">
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Electricidad ($/kWh)</label>
                       <input
@@ -675,31 +696,6 @@ function ProjectManager() {
                         className="form-input"
                         value={printForm.electricity_cost_kwh}
                         onChange={e => setPrintForm(prev => ({ ...prev, electricity_cost_kwh: parseFloat(e.target.value) || 0 }))}
-                      />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <label className="form-label" style={{ marginBottom: 0 }}>Post-proceso</label>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: '600' }} onClick={() => setPrintForm(prev => ({ ...prev, post_process_unit: prev.post_process_unit === 'hours' ? 'minutes' : 'hours' }))}>
-                          {printForm.post_process_unit === 'hours' ? 'H' : 'M'}
-                        </span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="form-input"
-                        value={printForm.post_process_value}
-                        onChange={e => setPrintForm(prev => ({ ...prev, post_process_value: parseFloat(e.target.value) || 0 }))}
-                      />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Mano de Obra ($/h)</label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        className="form-input"
-                        value={printForm.post_process_hourly_rate}
-                        onChange={e => setPrintForm(prev => ({ ...prev, post_process_hourly_rate: parseFloat(e.target.value) || 0 }))}
                       />
                     </div>
                   </div>
@@ -809,9 +805,62 @@ function ProjectManager() {
                   <span className="result-value">${parseFloat(projectDetails.depreciation_cost).toFixed(2)}</span>
                 </div>
 
-                <div className="result-row">
-                  <span className="result-label"><Wrench size={14} /> Mano de Obra Acabados</span>
-                  <span className="result-value">${parseFloat(projectDetails.post_process_cost).toFixed(2)}</span>
+                <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span className="result-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Wrench size={14} /> Mano de Obra Proyecto
+                    </span>
+                    <span className="result-value" style={{ fontWeight: 'bold' }}>
+                      ${parseFloat(projectDetails.post_process_cost).toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Tiempo</span>
+                        <div className="toggle-group" style={{ scale: '0.75', transformOrigin: 'right', padding: '1px' }}>
+                          <button
+                            type="button"
+                            className={`toggle-btn ${laborUnit === 'hours' ? 'active' : ''}`}
+                            style={{ padding: '0.1rem 0.3rem', fontSize: '0.65rem' }}
+                            onClick={() => setLaborUnit('hours')}
+                          >
+                            H
+                          </button>
+                          <button
+                            type="button"
+                            className={`toggle-btn ${laborUnit === 'minutes' ? 'active' : ''}`}
+                            style={{ padding: '0.1rem 0.3rem', fontSize: '0.65rem' }}
+                            onClick={() => setLaborUnit('minutes')}
+                          >
+                            M
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        className="form-input"
+                        style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', height: '30px' }}
+                        value={getLaborTimeDisplay()}
+                        onChange={e => handleLaborTimeChange(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Tarifa ($/h)</div>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        className="form-input"
+                        style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', height: '30px' }}
+                        value={parseFloat(projectDetails.labor_hourly_rate)}
+                        onChange={e => handleUpdateProjectGeneral('labor_hourly_rate', parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="result-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>

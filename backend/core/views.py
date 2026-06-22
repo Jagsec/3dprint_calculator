@@ -208,7 +208,9 @@ class ImportBackupView(APIView):
                     description=pr.get('description'),
                     margin_percentage=pr.get('margin_percentage', '30.00'),
                     status=pr.get('status', 'QUOTED'),
-                    due_date=pr.get('due_date')
+                    due_date=pr.get('due_date'),
+                    labor_minutes=pr.get('labor_minutes', 0),
+                    labor_hourly_rate=pr.get('labor_hourly_rate', '8.00')
                 )
 
                 # Re-vincular e importar ProjectPrints asociados
@@ -227,9 +229,7 @@ class ImportBackupView(APIView):
                         print_time_minutes=prt.get('print_time_minutes'),
                         printer_wattage=prt.get('printer_wattage'),
                         electricity_cost_kwh=prt.get('electricity_cost_kwh'),
-                        printer_depreciation_hour=prt.get('printer_depreciation_hour'),
-                        post_process_minutes=prt.get('post_process_minutes', 0),
-                        post_process_hourly_rate=prt.get('post_process_hourly_rate')
+                        printer_depreciation_hour=prt.get('printer_depreciation_hour')
                     )
 
                 # Re-vincular e importar ProjectMaterials asociados

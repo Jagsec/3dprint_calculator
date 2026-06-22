@@ -73,7 +73,6 @@ class ProjectPrintSerializer(serializers.ModelSerializer):
     material_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     electricity_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     printer_depreciation_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    post_process_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     total_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     printer_details = PrinterSerializer(source='printer', read_only=True)
 
@@ -83,8 +82,7 @@ class ProjectPrintSerializer(serializers.ModelSerializer):
             'id', 'project', 'name', 'printer', 'printer_details',
             'filament_type', 'filament_cost_per_kg', 'part_weight_grams', 'waste_percentage',
             'print_time_minutes', 'printer_wattage', 'electricity_cost_kwh', 'printer_depreciation_hour',
-            'post_process_minutes', 'post_process_hourly_rate',
-            'material_cost', 'electricity_cost', 'printer_depreciation_cost', 'post_process_cost', 'total_cost',
+            'material_cost', 'electricity_cost', 'printer_depreciation_cost', 'total_cost',
             'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
@@ -132,6 +130,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'user', 'client', 'client_details', 'name', 'description', 
             'margin_percentage', 'status', 'due_date', 
+            'labor_minutes', 'labor_hourly_rate',
             'prints', 'project_materials', 'tasks',
             'material_cost', 'electricity_cost', 'depreciation_cost', 'post_process_cost', 
             'prints_cost', 'hardware_cost', 'direct_cost', 'margin_value', 'total_price',

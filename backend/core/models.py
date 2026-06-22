@@ -90,6 +90,8 @@ class Project(models.Model):
     margin_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('30.00'))
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='QUOTED')
     due_date = models.DateField(blank=True, null=True)
+    labor_minutes = models.IntegerField(default=0)
+    labor_hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('8.00'))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -115,7 +117,8 @@ class Project(models.Model):
 
     @property
     def post_process_cost(self):
-        return sum((item.post_process_cost for item in self.prints.all()), Decimal('0.00')).quantize(Decimal('0.01'))
+        hours = Decimal(self.labor_minutes) / Decimal('60.0')
+        return (hours * self.labor_hourly_rate).quantize(Decimal('0.01'))
 
     @property
     def prints_cost(self):
@@ -127,7 +130,7 @@ class Project(models.Model):
 
     @property
     def direct_cost(self):
-        return (self.prints_cost + self.hardware_cost).quantize(Decimal('0.01'))
+        return (self.prints_cost + self.hardware_cost + self.post_process_cost).quantize(Decimal('0.01'))
 
     @property
     def margin_value(self):
@@ -155,9 +158,6 @@ class ProjectPrint(models.Model):
     electricity_cost_kwh = models.DecimalField(max_digits=10, decimal_places=4)
     printer_depreciation_hour = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Datos de post-procesado (mano de obra)
-    post_process_minutes = models.IntegerField(default=0)
-    post_process_hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -182,13 +182,8 @@ class ProjectPrint(models.Model):
         return (hours * self.printer_depreciation_hour).quantize(Decimal('0.01'))
 
     @property
-    def post_process_cost(self):
-        hours = Decimal(self.post_process_minutes) / Decimal('60.0')
-        return (hours * self.post_process_hourly_rate).quantize(Decimal('0.01'))
-
-    @property
     def total_cost(self):
-        return (self.material_cost + self.electricity_cost + self.printer_depreciation_cost + self.post_process_cost).quantize(Decimal('0.01'))
+        return (self.material_cost + self.electricity_cost + self.printer_depreciation_cost).quantize(Decimal('0.01'))
 
 # 6. Relación de Materiales de Hardware agregados a un Proyecto
 class ProjectMaterial(models.Model):
